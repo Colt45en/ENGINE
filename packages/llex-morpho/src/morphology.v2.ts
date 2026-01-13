@@ -91,11 +91,12 @@ export function createLLEMorphologyV2() {
       root = fixedRoot;
       consumedEnd -= delta; // keep indices consistent relative to original `word`
       
-      // Safety check: if stem fix resulted in invalid state, reset to ensure valid root
+      // Safety check: ensure consumedEnd never becomes less than consumedStart
+      // This should not happen with well-formed minimalStemFix, but we handle it defensively
       if (consumedEnd < consumedStart) {
-        // This should not happen with well-formed input, but defensively handle it
-        console.warn(`Invalid state after stem fix for word "${word}": consumedEnd < consumedStart`);
         consumedEnd = consumedStart;
+        // Empty root is better than invalid state
+        root = "";
       }
     }
 

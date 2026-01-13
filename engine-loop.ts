@@ -43,22 +43,22 @@ export async function runLoop({ update, render, targetFps = 60 }: LoopFns): Prom
 
 // Example usage when run directly
 if (require.main === module) {
-  let running = true;
-  
-  process.on("SIGINT", () => {
-    console.log("\n🛑 SIGINT received. Shutting down...");
-    running = false;
-  });
+  (async () => {
+    const control = await runLoop({
+      update: (dt) => {
+        console.log("update dt:", dt.toFixed(4));
+      },
+      render: () => {},
+      targetFps: 10,
+    });
 
-  runLoop({
-    update: (dt) => {
-      if (!running) {
+    process.on("SIGINT", () => {
+      console.log("\n🛑 SIGINT received. Shutting down...");
+      control.stop();
+      setTimeout(() => {
         console.log("✅ loop ended cleanly");
         process.exit(0);
-      }
-      console.log("update dt:", dt.toFixed(4));
-    },
-    render: () => {},
-    targetFps: 10,
-  });
+      }, 200);
+    });
+  })();
 }

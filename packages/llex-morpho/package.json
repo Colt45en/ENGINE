@@ -1,14 +1,21 @@
 {
-  "name": "llex-morpho",
-  "version": "1.0.0",
+  "name": "@llex/morpho",
+  "version": "2.0.0",
+  "description": "LLE Morphology v2 - Production-grade morphological analysis with fixed root span tracking",
   "type": "module",
-  "description": "LLE Morphology analysis",
-  "main": "src/morphology.v2.ts",
-  "scripts": {
-    "build": "tsc"
+  "main": "./src/morphology.v2.ts",
+  "exports": {
+    ".": "./src/morphology.v2.ts"
   },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.0.0"
-  }
+  "scripts": {
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "morphology",
+    "nlp",
+    "linguistics",
+    "segmentation"
+  ],
+  "author": "",
+  "license": "MIT"
 }

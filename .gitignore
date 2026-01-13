@@ -1,6 +1,8 @@
 # Built things
 _Debug/
 Compiled/
+dist/
+build/
 
 # AudioCache can be rebuilt from sources
 AudioCache/
@@ -30,11 +32,44 @@ game28.dta
 # Log files
 warnings.log
 
-# Node modules
+# Node.js
 node_modules/
-
-# TypeScript build output
-dist/
-
-# Lock files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 package-lock.json
+yarn.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+.pytest_cache/
+
+# ML models and data
+*.pt
+*.pth
+*.h5
+*.onnx
+data/
+*.jsonl
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# TypeScript
+*.tsbuildinfo
+
+# Test/verification scripts (temporary)
+verify.js

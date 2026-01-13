@@ -1,0 +1,19 @@
+{
+  "name": "@llex/training",
+  "version": "1.0.0",
+  "description": "Training modules for morphological segmentation and semantic classification",
+  "main": "./src/train_segmentation.py",
+  "scripts": {
+    "train:seg": "python src/train_segmentation.py",
+    "train:sem": "python src/train_semantic.py",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "training",
+    "machine-learning",
+    "pytorch",
+    "morphology"
+  ],
+  "author": "",
+  "license": "MIT"
+}

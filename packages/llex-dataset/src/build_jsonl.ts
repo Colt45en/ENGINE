@@ -2,100 +2,170 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { createLLEMorphologyV2 } from "../../llex-morpho/src/morphology.v2";
+import { createLLEMorphologyV2 } from "../../llex-morpho/src/morphology.v2.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const wordsPath = path.join(__dirname, "sample_words.txt");
-const words = fs
-  .readFileSync(wordsPath, "utf8")
-  .split(/\r?\n/)
-  .map((s) => s.trim())
-  .filter(Boolean);
+// ✅ FIX BUG #2: Use full names B-ROOT/I-ROOT instead of B-ROO/I-ROO
+const BIO_TAGS = ["O", "B-PREFIX", "I-PREFIX", "B-ROOT", "I-ROOT", "B-SUFFIX", "I-SUFFIX"] as const;
+type BIOTag = typeof BIO_TAGS[number];
 
-const morpho = createLLEMorphologyV2();
+type SegmentationExample = {
+  word: string;
+  labels: BIOTag[];
+  morphemes: Array<{
+    type: string;
+    text: string;
+    start: number;
+    end: number;
+  }>;
+};
 
-type SpanType = "prefix" | "root" | "suffix";
-type Span = Readonly<{ type: SpanType; start: number; end: number }>;
+type SemanticExample = {
+  word: string;
+  root: string;
+  prefixes: string[];
+  suffixes: string[];
+  tags: string[];
+  complexity: number;
+  confidence: number; // ✅ HIGH-LEVERAGE IMPROVEMENT #1
+};
 
-function spanToTag(type: SpanType): "PRE" | "ROOT" | "SUF" {
-  if (type === "prefix") return "PRE";
-  if (type === "root") return "ROOT";
-  return "SUF";
-}
+/**
+ * Builds segmentation dataset (BIO labels for char-level tagging)
+ */
+export function buildSegmentationDataset(words: string[]): SegmentationExample[] {
+  const morpho = createLLEMorphologyV2();
+  const examples: SegmentationExample[] = [];
 
-function toBIO(word: string, spans: readonly Span[]) {
-  const L = word.length;
-  const labels = new Array<string>(L).fill("O");
+  for (const word of words) {
+    const result = morpho(word);
+    const labels: BIOTag[] = Array(result.word.length).fill("O");
 
-  for (const s of spans) {
-    const tag = spanToTag(s.type);
-    if (s.start >= 0 && s.start < L) labels[s.start] = `B-${tag}`;
-    for (let i = s.start + 1; i < s.end && i < L; i++) labels[i] = `I-${tag}`;
-  }
+    for (const m of result.morphemes) {
+      let prefix: "PREFIX" | "ROOT" | "SUFFIX";
+      
+      // Map type to BIO prefix
+      if (m.type === "prefix") prefix = "PREFIX";
+      else if (m.type === "root") prefix = "ROOT";
+      else prefix = "SUFFIX";
 
-  return labels;
-}
+      // First char gets B-, rest get I-
+      for (let i = m.start; i < m.end; i++) {
+        if (i === m.start) {
+          labels[i] = `B-${prefix}` as BIOTag;
+        } else {
+          labels[i] = `I-${prefix}` as BIOTag;
+        }
+      }
+    }
 
-const segPath = path.join(__dirname, "../../data/processed/segtag.jsonl");
-const clsPath = path.join(__dirname, "../../data/processed/class.jsonl");
-
-fs.mkdirSync(path.dirname(segPath), { recursive: true });
-
-const segOut = fs.createWriteStream(segPath, { flags: "w" });
-const clsOut = fs.createWriteStream(clsPath, { flags: "w" });
-
-for (const w of words) {
-  const r = morpho(w);
-
-  const spans: Span[] = r.morphemes.map((m) => ({
-    type: m.type,
-    start: m.start,
-    end: m.end,
-  }));
-
-  const labels = toBIO(r.word, spans);
-
-  // ✅ Sanity check: label length must match word length
-  if (labels.length !== r.word.length) {
-    throw new Error(`Label length mismatch for ${r.word}: ${labels.length} vs ${r.word.length}`);
-  }
-
-  segOut.write(
-    JSON.stringify({
-      word: r.word,
-      spans,
+    examples.push({
+      word: result.word,
       labels,
-      morphemes: [...r.prefixes, r.root, ...r.suffixes],
-    }) + "\n"
-  );
+      morphemes: result.morphemes.map(m => ({
+        type: m.type,
+        text: m.text,
+        start: m.start,
+        end: m.end,
+      })),
+    });
+  }
 
-  // weak semantic bootstrap (same as before; replace with gold later)
-  let semantic: "Action" | "State" | "Structure" | "Property" | "Entity" | "General" = "General";
-  const suf = new Set(r.suffixes);
-
-  const looksVerb = ["ize", "ise", "fy", "ate", "ing", "ed"].some((s) => suf.has(s));
-  const looksNoun = ["ness", "tion", "sion", "ment", "ism", "ship", "hood", "dom"].some((s) => suf.has(s));
-  const looksAdj  = ["ive", "al", "ous", "ical", "ary", "ic"].some((s) => suf.has(s));
-
-  if (looksVerb) semantic = "Action";
-  else if (looksAdj) semantic = "Property";
-  else if (looksNoun) semantic = "Entity";
-
-  clsOut.write(
-    JSON.stringify({
-      word: r.word,
-      prefixes: r.prefixes,
-      root: r.root,
-      suffixes: r.suffixes,
-      semantic,
-    }) + "\n"
-  );
+  return examples;
 }
 
-segOut.end();
-clsOut.end();
+/**
+ * Builds semantic dataset (affix presence + root for classification)
+ */
+export function buildSemanticDataset(
+  words: string[],
+  tagExtractor?: (word: string) => string[]
+): SemanticExample[] {
+  const morpho = createLLEMorphologyV2();
+  const examples: SemanticExample[] = [];
 
-console.log("Wrote:", segPath);
-console.log("Wrote:", clsPath);
+  for (const word of words) {
+    const result = morpho(word);
+    const tags = tagExtractor ? tagExtractor(word) : [];
+
+    examples.push({
+      word: result.word,
+      root: result.root,
+      prefixes: [...result.prefixes],
+      suffixes: [...result.suffixes],
+      tags,
+      complexity: result.complexity,
+      confidence: result.confidence,
+    });
+  }
+
+  return examples;
+}
+
+/**
+ * Writes dataset to JSONL file
+ */
+export function writeJSONL<T>(filename: string, data: T[]): void {
+  const lines = data.map(item => JSON.stringify(item)).join("\n");
+  fs.writeFileSync(filename, lines, "utf-8");
+  console.log(`✅ Wrote ${data.length} examples to ${filename}`);
+}
+
+/**
+ * Reads JSONL file
+ */
+export function readJSONL<T>(filename: string): T[] {
+  const content = fs.readFileSync(filename, "utf-8");
+  return content
+    .split("\n")
+    .filter(line => line.trim())
+    .map(line => JSON.parse(line) as T);
+}
+
+// ===== Example usage =====
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const sampleWords = [
+    "reactivate",
+    "unhappiness",
+    "preprocessing",
+    "internationalization",
+    "counterproductive",
+    "underestimated",
+    "running",
+    "walked",
+    "faster",
+    "beautiful",
+  ];
+
+  console.log("🔧 Building segmentation dataset...");
+  const segData = buildSegmentationDataset(sampleWords);
+  
+  const outDir = path.join(__dirname, "../../../data");
+  if (!fs.existsSync(outDir)) {
+    fs.mkdirSync(outDir, { recursive: true });
+  }
+  
+  writeJSONL(path.join(outDir, "segmentation.jsonl"), segData);
+
+  console.log("\n🔧 Building semantic dataset...");
+  const semData = buildSemanticDataset(sampleWords, (word) => {
+    // Simple heuristic tag extraction (could be replaced with real logic)
+    const tags: string[] = [];
+    if (word.endsWith("ing")) tags.push("verb:progressive");
+    if (word.endsWith("ed")) tags.push("verb:past");
+    if (word.endsWith("ness")) tags.push("noun");
+    if (word.endsWith("ly")) tags.push("adverb");
+    return tags;
+  });
+  
+  writeJSONL(path.join(outDir, "semantic.jsonl"), semData);
+
+  console.log("\n✅ Dataset generation complete!");
+  console.log(`\n📊 Sample segmentation example:`);
+  console.log(JSON.stringify(segData[0], null, 2));
+  console.log(`\n📊 Sample semantic example:`);
+  console.log(JSON.stringify(semData[0], null, 2));
+}

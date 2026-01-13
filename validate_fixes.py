@@ -8,14 +8,16 @@ Checks:
 """
 
 import json
+import os
 
 print("=" * 60)
 print("COMPREHENSIVE VALIDATION OF MORPHOLOGY V2 FIXES")
 print("=" * 60)
 print()
 
-# Load the generated dataset
-dataset_path = "/home/runner/work/ENGINE/ENGINE/packages/data/processed/segtag.jsonl"
+# Load the generated dataset using relative path
+script_dir = os.path.dirname(os.path.abspath(__file__))
+dataset_path = os.path.join(script_dir, "packages", "data", "processed", "segtag.jsonl")
 
 with open(dataset_path, 'r') as f:
     examples = [json.loads(line) for line in f if line.strip()]

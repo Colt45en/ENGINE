@@ -90,7 +90,13 @@ export function createLLEMorphologyV2() {
       const delta = root.length - fixedRoot.length; // positive if root got shorter
       root = fixedRoot;
       consumedEnd -= delta; // keep indices consistent relative to original `word`
-      if (consumedEnd < consumedStart) consumedEnd = consumedStart; // hard safety clamp
+      
+      // Safety check: if stem fix resulted in invalid state, reset to ensure valid root
+      if (consumedEnd < consumedStart) {
+        // This should not happen with well-formed input, but defensively handle it
+        console.warn(`Invalid state after stem fix for word "${word}": consumedEnd < consumedStart`);
+        consumedEnd = consumedStart;
+      }
     }
 
     // ---- Rebuild morpheme spans in original word coordinate space ----

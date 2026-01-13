@@ -2,7 +2,11 @@
 """Test script to verify the Python dataset loader works correctly."""
 
 import sys
-sys.path.insert(0, '/home/runner/work/ENGINE/ENGINE/training')
+import os
+
+# Add training directory to path using relative path
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(script_dir, 'training'))
 
 from segtag_dataset import SegTagDataset, TAGS, TAG2ID
 
@@ -15,8 +19,8 @@ assert "I-ROOT" in TAGS, "I-ROOT tag missing!"
 assert "B-ROO" not in TAGS, "B-ROO tag should not exist!"
 print("✅ Tag set is correct (ROOT not ROO)\n")
 
-# Load dataset
-dataset_path = "/home/runner/work/ENGINE/ENGINE/packages/data/processed/segtag.jsonl"
+# Load dataset using relative path
+dataset_path = os.path.join(script_dir, "packages", "data", "processed", "segtag.jsonl")
 dataset = SegTagDataset(dataset_path)
 
 print(f"Loaded {len(dataset)} examples\n")

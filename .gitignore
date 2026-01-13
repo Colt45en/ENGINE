@@ -43,3 +43,9 @@ dist/
 
 # Generated data
 packages/data/processed/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

@@ -70,3 +70,6 @@ data/
 
 # TypeScript
 *.tsbuildinfo
+
+# Test/verification scripts (temporary)
+verify.js

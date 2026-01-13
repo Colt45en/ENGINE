@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Endless Loop Examples</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .example {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .output {
+            background: #f5f5f5;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+        h1 {
+            color: #333;
+        }
+        h2 {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Browser Endless Loop Examples</h1>
+    <p>Production-safe endless loops that won't freeze the UI</p>
+
+    <div class="example">
+        <h2>1. requestAnimationFrame (Frame-based loop)</h2>
+        <p>Best for animation and per-frame updates</p>
+        <button id="startRaf">Start RAF Loop</button>
+        <button id="stopRaf">Stop RAF Loop</button>
+        <div class="output" id="rafOutput"></div>
+    </div>
+
+    <div class="example">
+        <h2>2. setInterval (Time-based loop)</h2>
+        <p>Best for fixed time intervals</p>
+        <button id="startInterval">Start Interval Loop</button>
+        <button id="stopInterval">Stop Interval Loop</button>
+        <div class="output" id="intervalOutput"></div>
+    </div>
+
+    <script>
+        // ========================================
+        // 1. requestAnimationFrame example
+        // ========================================
+        let rafRunning = false;
+        let rafFrameCount = 0;
+        const rafOutput = document.getElementById('rafOutput');
+
+        function rafLoop() {
+            if (!rafRunning) return;
+
+            rafFrameCount++;
+            const line = `frame tick ${rafFrameCount}\n`;
+            rafOutput.textContent += line;
+            rafOutput.scrollTop = rafOutput.scrollHeight;
+
+            requestAnimationFrame(rafLoop);
+        }
+
+        document.getElementById('startRaf').addEventListener('click', () => {
+            if (!rafRunning) {
+                rafRunning = true;
+                rafFrameCount = 0;
+                rafOutput.textContent = 'Starting requestAnimationFrame loop...\n';
+                requestAnimationFrame(rafLoop);
+            }
+        });
+
+        document.getElementById('stopRaf').addEventListener('click', () => {
+            rafRunning = false;
+            rafOutput.textContent += '✅ RAF loop stopped cleanly\n';
+        });
+
+        // ========================================
+        // 2. setInterval example
+        // ========================================
+        let intervalId = null;
+        let intervalCount = 0;
+        const intervalOutput = document.getElementById('intervalOutput');
+
+        document.getElementById('startInterval').addEventListener('click', () => {
+            if (intervalId === null) {
+                intervalCount = 0;
+                intervalOutput.textContent = 'Starting setInterval loop...\n';
+                
+                intervalId = window.setInterval(() => {
+                    intervalCount++;
+                    const line = `interval tick ${intervalCount}\n`;
+                    intervalOutput.textContent += line;
+                    intervalOutput.scrollTop = intervalOutput.scrollHeight;
+                }, 250);
+            }
+        });
+
+        document.getElementById('stopInterval').addEventListener('click', () => {
+            if (intervalId !== null) {
+                clearInterval(intervalId);
+                intervalId = null;
+                intervalOutput.textContent += '✅ Interval loop stopped cleanly\n';
+            }
+        });
+    </script>
+</body>
+</html>

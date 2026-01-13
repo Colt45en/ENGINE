@@ -29,3 +29,12 @@ game28.dta
 
 # Log files
 warnings.log
+
+# Node modules
+node_modules/
+
+# TypeScript build output
+dist/
+
+# Lock files
+package-lock.json

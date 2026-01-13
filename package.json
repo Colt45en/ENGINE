@@ -1,0 +1,32 @@
+{
+  "name": "lle-morphology-pipeline",
+  "version": "1.0.0",
+  "description": "Production-grade morphological analysis pipeline with ML training",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build:dataset": "node --loader ts-node/esm packages/llex-dataset/src/build_jsonl.ts",
+    "train:segmentation": "cd packages/llex-training && python src/train_segmentation.py",
+    "train:semantic": "cd packages/llex-training && python src/train_semantic.py",
+    "test": "echo \"Tests not implemented yet\" && exit 0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "morphology",
+    "nlp",
+    "machine-learning",
+    "linguistics"
+  ],
+  "author": "",
+  "license": "MIT"
+}

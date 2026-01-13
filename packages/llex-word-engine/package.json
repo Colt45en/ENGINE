@@ -1,0 +1,20 @@
+{
+  "name": "@llex/word-engine",
+  "version": "1.0.0",
+  "description": "Word engine integration for telemetry ingestion and processing",
+  "type": "module",
+  "main": "./src/word-engine.ts",
+  "exports": {
+    ".": "./src/word-engine.ts"
+  },
+  "scripts": {
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "telemetry",
+    "word-processing",
+    "nlp"
+  ],
+  "author": "",
+  "license": "MIT"
+}

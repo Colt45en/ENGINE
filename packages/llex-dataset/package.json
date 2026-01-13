@@ -1,0 +1,28 @@
+{
+  "name": "@llex/dataset",
+  "version": "1.0.0",
+  "description": "Dataset builder for morphological segmentation and semantic classification",
+  "type": "module",
+  "main": "./src/build_jsonl.ts",
+  "exports": {
+    ".": "./src/build_jsonl.ts"
+  },
+  "scripts": {
+    "build": "node --loader ts-node/esm src/build_jsonl.ts",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "dependencies": {
+    "@llex/morpho": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "keywords": [
+    "dataset",
+    "morphology",
+    "training",
+    "machine-learning"
+  ],
+  "author": "",
+  "license": "MIT"
+}

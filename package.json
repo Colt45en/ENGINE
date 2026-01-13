@@ -1,17 +1,18 @@
 {
-  "name": "lle-engine",
+  "name": "engine-endless-loops",
   "version": "1.0.0",
-  "private": true,
-  "type": "module",
-  "workspaces": [
-    "packages/*"
-  ],
+  "description": "Production-safe endless loop patterns for various environments",
   "scripts": {
-    "build": "npm run build --workspaces",
-    "generate-dataset": "cd packages/llex-dataset && npm run build"
+    "build": "tsc",
+    "dev:endless": "ts-node endless-loop.ts",
+    "dev:engine": "ts-node engine-loop.ts"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
     "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }

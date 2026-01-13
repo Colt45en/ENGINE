@@ -19,6 +19,9 @@ export function createLLEMorphologyV2() {
   const prefixes = [...morphemePatterns.prefixes].sort((a, b) => b.length - a.length);
   const suffixes = [...morphemePatterns.suffixes].sort((a, b) => b.length - a.length);
 
+  // Minimum root length to preserve (prevents over-aggressive affix stripping)
+  const MIN_ROOT_LENGTH = 2;
+
   type MorphemeType = "prefix" | "root" | "suffix";
   type Morpheme = Readonly<{ type: MorphemeType; text: string; start: number; end: number }>;
 
@@ -70,8 +73,8 @@ export function createLLEMorphologyV2() {
       search = false;
       for (const suf of suffixes) {
         const startIdx = consumedEnd - suf.length;
-        // keep at least 2 chars for root to reduce garbage splits
-        if (startIdx > consumedStart + 1 && word.slice(startIdx, consumedEnd) === suf) {
+        // Keep at least MIN_ROOT_LENGTH chars for root to reduce garbage splits
+        if (startIdx > consumedStart + MIN_ROOT_LENGTH - 1 && word.slice(startIdx, consumedEnd) === suf) {
           foundSuffixes.unshift(suf);
           consumedEnd = startIdx;
           search = true;
@@ -84,8 +87,9 @@ export function createLLEMorphologyV2() {
     let root = word.slice(consumedStart, consumedEnd);
 
     // ✅ FIX BUG #1: if minimalStemFix changes root length, adjust consumedEnd so spans remain truthful
-    const lastSuf = foundSuffixes[foundSuffixes.length - 1] ?? "";
-    const fixedRoot = minimalStemFix(root, lastSuf);
+    // Use the rightmost suffix (first in array after unshift operations) for stem fixing
+    const rightmostSuffix = foundSuffixes[0] ?? "";
+    const fixedRoot = minimalStemFix(root, rightmostSuffix);
 
     if (fixedRoot !== root) {
       const delta = root.length - fixedRoot.length; // positive if root got shorter

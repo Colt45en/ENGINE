@@ -29,3 +29,23 @@ game28.dta
 
 # Log files
 warnings.log
+
+# Node modules and dependencies
+node_modules/
+package-lock.json
+
+# Build outputs
+dist/
+*.js
+*.js.map
+*.d.ts
+*.d.ts.map
+
+# Generated data
+packages/data/processed/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
